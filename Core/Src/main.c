@@ -56,6 +56,7 @@ static void MX_GPIO_Init(void);
 
 #define GPIOD_BASE_ADDRESS 0x40020C00
 #define GPIOA_BASE_ADDRESS 0x40020000
+uint32_t dem = 1;
 void GPIO_Init()
 {
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -107,6 +108,38 @@ char button_init()
 	//uint32_t* GPIOD_IDR = (uint32_t*)(GPIOD_BASE_ADDRES + 0x10);
 	return *GPIOD_IDR & 0b1;
 }
+
+void EXIT0_Init()
+{
+	//EXIT STM
+	uint32_t* EXTICR1 = (uint32_t*)0x40013808;
+	*EXTICR1 &= ~(0b1111 << 0);
+	uint32_t* FTSR = (uint32_t*)0x40013c0c;
+	*FTSR |= 0b1 << 0;
+	uint32_t* IMR = (uint32_t*)0x40013c00;
+	*IMR |= 0b1 << 0;
+
+
+	//Cotre ARM
+	uint32_t* NVIC_ISER0 = (uint32_t*)0xe000e100;
+	*NVIC_ISER0 |= (0b1 << 6);
+}
+
+void EXTI0_IRQHandler()
+{
+	// su dung ham button trong nay
+	dem++;
+	if(dem % 2 == 0)
+	{
+		led_ctrl(LED_1, LED_ON);
+	}
+	else
+	{
+		led_ctrl(LED_1, LED_OFF);
+	}
+	uint32_t* PR = (uint32_t*)0x40013c14;
+	*PR |= (0b1<<0);
+}
 /* USER CODE END 0 */
 
 /**
@@ -116,6 +149,7 @@ char button_init()
 int main(void)
 {
 	GPIO_Init();
+	EXIT0_Init();
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -150,6 +184,9 @@ int main(void)
 	  HAL_Delay(1000);
 	  led_ctrl(LED_2, LED_OFF);
 	  HAL_Delay(1000);
+
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
